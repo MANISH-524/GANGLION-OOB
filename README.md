@@ -185,25 +185,25 @@ Every security tool that runs **inside** the OS shares one fatal flaw: malware w
 ## 🏗️ Architecture — three separated trust planes
 
 ```
-                            ┌───────────────────────────────────────────────┐
-   GUEST VM (untrusted)     │             HOST CONTROL PLANE                 │
- ┌──────────────────────┐   │  ┌─────────────────────────────────────────┐  │
- │  Sentry Agent         │──┼─▶│  SecureReceiver → Correlation / Scoring   │  │
- │  (sender-only,        │AES│  │  Sigma engine · ATT&CK map · SOC queue    │  │
- │   zero listen ports)  │GCM│  └───────────────────┬─────────────────────┘  │
- └──────────────────────┘   │                       │ threat score ≥ threshold │
-   authenticated,           │                       ▼                          │
-   replay-protected         │  ┌─────────────────────────────────────────┐    │
-                            │  │  RESPONSE                                 │    │
-                            │  │  • host containment (iptables/nftables/   │    │
-                            │  │    netsh/pf)  ← real, dry-run by default   │    │
-                            │  │  • hypervisor isolate/dump/rollback        │    │
-                            │  │    (VBox/Proxmox/KVM adapter)              │    │
-                            │  │  • warm-standby failover (RTO timeline)    │    │
-                            │  └─────────────────────────────────────────┘    │
-                            └───────────────────────────────────────────────┘
+                               ┌──────────────────────────────────────────────────┐
+   GUEST VM (untrusted)        │             HOST CONTROL PLANE                   │
+ ┌───────────────────────┐     │  ┌──────────────────────────────────────────┐    │
+ │  Sentry Agent         │──────▶│  SecureReceiver → Correlation / Scoring   │   │
+ │  (sender-only,        │ AES │  │  Sigma engine · ATT&CK map · SOC queue   │    │
+ │   zero listen ports)  │ GCM │  └───────────────────┬──────────────────────┘    │
+ └───────────────────────┘     │                      │ threat score ≥ threshold  │
+   authenticated,              │                      ▼                           │
+   replay-protected            │  ┌───────────────────────────────────────────┐   │
+                               │  │  RESPONSE                                 │   │
+                               │  │  • host containment (iptables/nftables/   │   │
+                               │  │    netsh/pf)  ← real, dry-run by default  │   │
+                               │  │  • hypervisor isolate/dump/rollback       │   │
+                               │  │    (VBox/Proxmox/KVM adapter)             │   │ 
+                               │  │  • warm-standby failover (RTO timeline)   │   │
+                               │  └───────────────────────────────────────────┘   │
+                               └──────────────────────────────────────────────────┘
                                             │
-                ┌───────────────────────────┴───────────────────────────┐
+                ┌───────────────────────────┴─────────────────────────────┐
                 ▼                                                         ▼
         WARM STANDBY (promoted → ACTIVE)                   INFECTED VM (cured → rejoins as standby)
 ```
@@ -286,7 +286,7 @@ The goal isn't "another EDR." It's a **foundation layer workloads run on and dep
 ## 🦠 The Ransomware Kill-Chain (what `demo.py` shows)
 
 ```
-┌─────────────────────────────────────────────────────────────┐
+┌──────────────────────────────────────────────────────────────┐
 │ 1. BLOCK     host NIC drop in milliseconds (cut C2/exfil)    │
 │ 2. ISOLATE   move VM to quarantine VLAN (hypervisor adapter) │
 │ 3. DUMP      capture RAM → forensics_archive/                │
@@ -294,7 +294,7 @@ The goal isn't "another EDR." It's a **foundation layer workloads run on and dep
 │              ►►►  WORKLOAD KEEPS RUNNING  (RTO ~0.8s sim)    │
 │ 5. RESTORE   rollback infected disk to a clean golden image  │
 │ 6. REJOIN    cured VM returns as the new STANDBY (self-heal) │
-└─────────────────────────────────────────────────────────────┘
+└──────────────────────────────────────────────────────────────┘
 ```
 
 [↑ Back to top](#table-of-contents)
